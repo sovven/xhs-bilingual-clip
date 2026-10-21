@@ -1,0 +1,213 @@
+import React, { useEffect, useState } from "react";
+import {
+  AbsoluteFill,
+  continueRender,
+  delayRender,
+  interpolate,
+  OffthreadVideo,
+  staticFile,
+  useCurrentFrame,
+  useVideoConfig,
+} from "remotion";
+import { CARDS, CUES } from "./cues";
+import { CREDIT, TOTAL, VIDEO_H } from "./config";
+import { TitleLines } from "./TitleLines";
+export { TOTAL };
+
+export const W = 1080;
+export const H = 1920;
+export const FPS = 30;
+
+
+// 版面（参考外研社韩语竖屏：黑底 + 顶部两行大标题 + 中间原片 + 下方黄韩白中字幕）
+const TITLE_TOP = 120;
+const VIDEO_TOP = 440;
+
+const SUB_TOP = VIDEO_TOP + VIDEO_H + 40;
+const CARD_TOP = 1556;
+
+const BLUE = "#8fd3ff";
+const YELLOW = "#ffde3b";
+
+const ZH = "'NotoSC', 'Microsoft YaHei', sans-serif";
+const KO = "'NotoKR', 'NotoSC', 'Malgun Gothic', sans-serif";
+
+// title/video=false 用于导出剪映分层素材：底片（无标题字幕）、透明标题 PNG
+export type Props = { cards: boolean; subtitles: boolean; title?: boolean; video?: boolean };
+
+export const useFonts = () => {
+  const [handle] = useState(() => delayRender("fonts"));
+  useEffect(() => {
+    const faces = [
+      new FontFace("NotoSC", `url(${staticFile("fonts/NotoSansSC-VF.ttf")})`, { weight: "100 900" }),
+      new FontFace("NotoKR", `url(${staticFile("fonts/NotoSansKR-VF.ttf")})`, { weight: "100 900" }),
+    ];
+    Promise.all(faces.map((f) => f.load()))
+      .then((loaded) => {
+        loaded.forEach((f) => document.fonts.add(f));
+        continueRender(handle);
+      })
+      .catch((e) => {
+        console.error(e);
+        continueRender(handle);
+      });
+  }, [handle]);
+};
+
+const Title: React.FC = () => {
+  const line: React.CSSProperties = {
+    fontFamily: ZH,
+    fontWeight: 900,
+    fontSize: 104,
+    lineHeight: 1.22,
+    letterSpacing: 4,
+    color: "#fff",
+    textAlign: "center",
+  };
+  return (
+    <div style={{ position: "absolute", top: TITLE_TOP, left: 0, width: W }}>
+      <TitleLines style={line} />
+    </div>
+  );
+};
+
+const Credit: React.FC = () => (
+  <div
+    style={{
+      position: "absolute",
+      top: VIDEO_TOP - 50,
+      left: 0,
+      width: W,
+      textAlign: "center",
+      fontFamily: ZH,
+      fontWeight: 500,
+      fontSize: 26,
+      letterSpacing: 2,
+      color: "#8a8a8a",
+    }}
+  >
+    {CREDIT}
+  </div>
+);
+
+const Subtitle: React.FC<{ t: number }> = ({ t }) => {
+  const cue = CUES.find((c) => t >= c.start && t < c.end);
+  if (!cue) return null;
+  const orig = cue.steps
+    ? cue.steps.filter(([, at]) => t >= at).map(([s]) => s).join("")
+    : cue.orig;
+  return (
+    <div
+      style={{
+        position: "absolute",
+        top: SUB_TOP,
+        left: 50,
+        width: W - 100,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        textAlign: "center",
+      }}
+    >
+      <div
+        style={{
+          fontFamily: KO,
+          fontWeight: 900,
+          fontSize: cue.steps ? 84 : 58,
+          lineHeight: 1.32,
+          letterSpacing: cue.steps ? 10 : 0,
+          color: YELLOW,
+          whiteSpace: "pre-line",
+          wordBreak: "keep-all",
+        }}
+      >
+        {orig}
+      </div>
+      <div
+        style={{
+          marginTop: 14,
+          fontFamily: ZH,
+          fontWeight: 700,
+          fontSize: 46,
+          lineHeight: 1.4,
+          color: "#fff",
+          whiteSpace: "pre-line",
+        }}
+      >
+        {cue.zh}
+      </div>
+    </div>
+  );
+};
+
+const VocabCard: React.FC<{ t: number }> = ({ t }) => {
+  const card = CARDS.find((c) => t >= c.start && t < c.end);
+  if (!card) return null;
+  const inT = t - card.start;
+  const outT = card.end - t;
+  const k = Math.min(1, inT / 0.25, outT / 0.2);
+  const y = interpolate(Math.min(1, inT / 0.25), [0, 1], [18, 0]);
+  return (
+    <div
+      style={{
+        position: "absolute",
+        top: CARD_TOP,
+        left: 0,
+        width: W,
+        display: "flex",
+        justifyContent: "center",
+        opacity: k,
+        transform: `translateY(${y}px)`,
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 22,
+          padding: "16px 30px 16px 16px",
+          border: "2px solid #3a3a3a",
+          borderRadius: 14,
+          background: "#121212",
+        }}
+      >
+        <div
+          style={{
+            fontFamily: ZH,
+            fontWeight: 900,
+            fontSize: 28,
+            color: "#000",
+            background: YELLOW,
+            borderRadius: 8,
+            padding: "6px 12px",
+            letterSpacing: 2,
+          }}
+        >
+          重点表达
+        </div>
+        <div style={{ fontFamily: KO, fontWeight: 800, fontSize: 44, color: YELLOW }}>{card.word}</div>
+        <div style={{ fontFamily: ZH, fontWeight: 500, fontSize: 34, color: "#e8e8e8" }}>{card.mean}</div>
+      </div>
+    </div>
+  );
+};
+
+export const KimVideo: React.FC<Props> = ({ cards, subtitles, title = true, video = true }) => {
+  useFonts();
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const t = frame / fps;
+  return (
+    <AbsoluteFill style={{ background: video ? "#000" : "transparent" }}>
+      {title && <Title />}
+      {video && <Credit />}
+      {video && (
+        <div style={{ position: "absolute", top: VIDEO_TOP, left: 0, width: W, height: VIDEO_H, overflow: "hidden" }}>
+        <OffthreadVideo src={staticFile("clip.mp4")} style={{ width: W, height: VIDEO_H }} />
+      </div>
+      )}
+      {subtitles && <Subtitle t={t} />}
+      {cards && <VocabCard t={t} />}
+    </AbsoluteFill>
+  );
+};

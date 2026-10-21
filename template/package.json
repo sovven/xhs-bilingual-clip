@@ -1,0 +1,19 @@
+{
+  "name": "xhs-bilingual-clip",
+  "private": true,
+  "version": "1.0.0",
+  "description": "韩综/外语短视频 → 小红书竖屏双语字幕视频（外研社韩语版式）",
+  "scripts": {
+    "studio": "remotion studio src/index.ts",
+    "still": "remotion still src/index.ts Kim",
+    "render": "remotion render src/index.ts Kim out/成片.mp4",
+    "srt": "node scripts/make-srt.mjs",
+    "pack": "node scripts/jianying-pack.mjs"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.531",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "remotion": "4.0.531"
+  }
+}
