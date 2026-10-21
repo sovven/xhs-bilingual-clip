@@ -9,3 +9,9 @@ export const TOTAL = 78.17;
 export const VIDEO_H = 762;
 // 封面：public/cover_frame.png + 黄色原文钩子 + 白色中文钩子
 export const COVER_HOOK = { orig: "절대 주눅 들면 안 돼요!", zh: "被说 Scoot over？听不懂就问到底" };
+// 封面版式：band 黑底大标题 / poster 大字报 / card 韩中对照卡
+export const COVER_STYLE: "band" | "poster" | "card" | "reels" = "band";
+// 高亮色：标题方括号里的字、封面关键词。随便换，比如 #8FD3FF 浅蓝 / #C6F432 荧光绿 / #FFDE3B 黄 / #FF7AB6 粉
+export const ACCENT = "#8fd3ff";
+// reels 封面左上角的小字品牌（留空就不显示）
+export const COVER_BRAND = "";

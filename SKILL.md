@@ -32,7 +32,9 @@ description: 把 YouTube/Shorts 上的韩综（或其他外语）短视频片段
 7. **检查**：先抽几帧看版式，`npx remotion still src/index.ts Kim work/f.png --frame=N`，确认没问题再渲染整片。
 8. **出片**：
    - `npx remotion render src/index.ts Kim out/成片.mp4 --codec=h264 --crf=16 --audio-codec=aac --audio-bitrate=256k`
-   - 封面：先 `ffmpeg -ss <秒> -i public/clip.mp4 -frames:v 1 public/cover_frame.png`，在 config 里写 `COVER_HOOK`，再 `npx remotion still src/index.ts Cover out/封面_3比4.png`
+   - 封面：先挑一帧人物清楚、**没有烧录大字幕**的画面，`ffmpeg -ss <秒> -i public/clip.mp4 -frames:v 1 public/cover_frame.png`；在 config 里设置 `COVER_HOOK`、`COVER_STYLE`、`ACCENT`，然后运行 `npx remotion still src/index.ts Cover out/封面_3比4.png`
+     - `band` 黑底大标题（外研社同款）· `poster` 大字报 · `card` 韩中对照卡 · `reels` Reels 款（参考 Instagram 的 offtheclock.mag、1ma2c：画面铺满，底部两行粗白字，关键词用高亮色，下面一行斜体小字）
+     - `ACCENT` 是高亮色，可以随意换：浅蓝 #8FD3FF / 荧光绿 #C6F432 / 黄 #FFDE3B / 粉 #FF7AB6
    - `npm run srt` 生成双语 SRT；`npm run pack` 生成剪映素材（见下）
 9. **文案**：写 `out/小红书文案.txt`，包括标题、正文（剧情钩子 + 视频里的表达词汇表 + 互动提问）、素材出处和话题标签。
 
@@ -47,6 +49,11 @@ description: 把 YouTube/Shorts 上的韩综（或其他外语）短视频片段
 
 ## 版式参数（1080×1920）
 标题从 y=120 开始，104px，粗细 900；原片从 y=440 开始，宽 1080；原声字幕在原片下方 40px，黄色 #FFDE3B，58px，粗细 900；中文字幕白色，46px，粗细 700；词卡在 y≈1556；高亮色浅蓝 #8FD3FF。y>1700 的区域会被小红书的界面挡住，不要放内容。
+
+## 选片
+- 不做：体育（比赛、运动员、奥运）、政治/时政、负面社会新闻。
+- 优先 60 秒以内的 Shorts。常见来源：엠빅뉴스、WassupMan、숏박스、너덜트、지구오락실、유퀴즈、百想艺术大赏获奖感言、街头采访。
+- 配套工作台：KCLIP Studio（发现 → AI 推荐 → 一键制作）。
 
 ## 注意
 - 不要使用外研社（或其他机构）的 logo、账号名做水印或片尾，除非用户确认自己就是该账号的运营。

@@ -1,7 +1,7 @@
 import React from "react";
-import { TITLE } from "./config";
+import { ACCENT, TITLE } from "./config";
 
-export const BLUE = "#8fd3ff";
+export const BLUE = ACCENT;
 
 // "[金英哲]式英语" → 方括号内高亮
 const Line: React.FC<{ text: string; style: React.CSSProperties }> = ({ text, style }) => (
