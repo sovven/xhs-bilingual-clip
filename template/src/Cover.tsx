@@ -70,16 +70,17 @@ const Card: React.FC = () => (
 const hl = (t: string) =>
   t.split(/(\[[^\]]+\])/).filter(Boolean).map((p, i) => (p.startsWith("[") ? <span key={i} style={{ color: ACCENT }}>{p.slice(1, -1)}</span> : <span key={i}>{p}</span>));
 
+// 参考 offtheclock.mag / 1ma2c：字号克制、左对齐、留白多，只高亮关键词；小品牌字在上，小副标题在下
 const Reels: React.FC = () => (
   <AbsoluteFill style={{ background: "#000" }}>
     <Img src={staticFile("cover_frame.png")} style={{ position: "absolute", inset: 0, width: 1080, height: 1440, objectFit: "cover" }} />
-    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(0,0,0,0) 35%, rgba(0,0,0,.7) 62%, rgba(0,0,0,.88) 100%)" }} />
-    <div style={{ position: "absolute", left: 64, right: 64, top: 860 }}>
-      {COVER_BRAND && <div style={{ fontFamily: ZH, fontWeight: 600, fontSize: 30, color: "rgba(255,255,255,.85)", marginBottom: 18 }}>{COVER_BRAND}</div>}
+    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(0,0,0,0) 45%, rgba(0,0,0,.45) 70%, rgba(0,0,0,.72) 100%)" }} />
+    <div style={{ position: "absolute", left: 72, right: 72, bottom: 150 }}>
+      {COVER_BRAND && <div style={{ fontFamily: "'Helvetica Neue', Arial, sans-serif", fontWeight: 600, fontSize: 26, color: "rgba(255,255,255,.9)", marginBottom: 22, letterSpacing: -0.3 }}>{COVER_BRAND}</div>}
       {TITLE.map((t, i) => (
-        <div key={i} style={{ fontFamily: ZH, fontWeight: 800, fontSize: 84, lineHeight: 1.22, color: "#fff", letterSpacing: -1, textShadow: "0 2px 12px rgba(0,0,0,.35)" }}>{hl(t)}</div>
+        <div key={i} style={{ fontFamily: ZH, fontWeight: 700, fontSize: 64, lineHeight: 1.32, color: "#fff", textShadow: "0 1px 10px rgba(0,0,0,.3)" }}>{hl(t)}</div>
       ))}
-      <div style={{ fontFamily: KO, fontWeight: 600, fontStyle: "italic", fontSize: 32, color: "rgba(255,255,255,.8)", marginTop: 20 }}>{COVER_HOOK.orig}</div>
+      <div style={{ fontFamily: KO, fontWeight: 600, fontSize: 24, color: "rgba(255,255,255,.75)", marginTop: 18 }}>{COVER_HOOK.orig}</div>
     </div>
   </AbsoluteFill>
 );
