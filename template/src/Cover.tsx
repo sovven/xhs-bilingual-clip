@@ -11,7 +11,7 @@ import { TitleLines } from "./TitleLines";
 //  reels  Reels 款（参考 offtheclock / 1ma2c）：画面铺满，下方两行粗白字 + 高亮关键词 + 小字副标题
 export type CoverStyle = "band" | "poster" | "card" | "reels";
 
-const YELLOW = "#ffde3b";
+const YELLOW = ACCENT;
 const ZH = "'NotoSC', 'Microsoft YaHei', sans-serif";
 const KO = "'NotoKR', 'NotoSC', sans-serif";
 const plain = (t: string) => t.replace(/[[\]]/g, "");
