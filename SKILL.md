@@ -26,9 +26,12 @@ description: 把 YouTube/Shorts 上的韩综（或其他外语）短视频片段
    `whisper-cli -m <model> -f audio16k.wav -l ko -ojf -osrt --prompt "<节目名、人名、关键词>"`。
    如果有 YouTube 自动字幕，可以在浏览器里打开播放器的字幕，从网络请求里拿 timedtext json3（直接请求需要 pot 参数），用来交叉核对。
    **三方核对**：Whisper、YouTube ASR、画面烧录字幕对照着定稿。听不清的句子宁可删掉，也不要编，并在交付时告诉用户。
+4b. **原片自带字幕？** `node scripts/burned-subs.mjs public/clip.mp4 audio16k.json data/burned.json`（Windows 自带 OCR，免费，约 40 秒）。
+   - `mode=zh`：原片有准确的韩语台词字幕 → config 设 `SUB_MODE = "zh"`，**只加中文字幕**，时间轴直接用 burned.json 的 segments（和原片字幕同步出现/消失；OCR 漏掉的句子已用 Whisper 时间补上）。
+   - `mode=bilingual`：没有台词字幕（或只有综艺花字）→ 照常做韩中双语。
 5. **写字幕**：编辑 `src/cues.ts`。`orig` 是原声（韩语/英语照实写），`zh` 是中文；每条控制在 1–2 行，可以用 `\n` 手动换行。
    `steps` 用来让文字逐个出现（比如逐字母喊）。`CARDS` 是重点表达卡，每张至少显示 2.5 秒。
-6. **标题**：在 `src/config.ts` 里写 `TITLE`，两行，`[方括号]` 内的字高亮。**两行字数相同、不加标点**，否则左右对不齐。`CREDIT` 填素材出处。
+6. **标题和出处**：`CREDIT` **必填**（视频里必须标出处，没写会直接报错），格式“素材：<平台/频道>《节目名》<期数>”。在 `src/config.ts` 里写 `TITLE`，两行，`[方括号]` 内的字高亮。**两行字数相同、不加标点**，否则左右对不齐。`CREDIT` 填素材出处。
 7. **检查**：先抽几帧看版式，`npx remotion still src/index.ts Kim work/f.png --frame=N`，确认没问题再渲染整片。
 8. **出片**：
    - `npx remotion render src/index.ts Kim out/成片.mp4 --codec=h264 --crf=16 --audio-codec=aac --audio-bitrate=256k`

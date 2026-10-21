@@ -10,7 +10,10 @@ import {
   useVideoConfig,
 } from "remotion";
 import { CARDS, CUES } from "./cues";
-import { CREDIT, TOTAL, VIDEO_H } from "./config";
+import { CREDIT, SUB_MODE, TOTAL, VIDEO_H } from "./config";
+
+// 视频里必须写素材出处
+if (!CREDIT.trim()) throw new Error("config.ts 的 CREDIT 必填：视频里必须标注素材出处");
 import { TitleLines } from "./TitleLines";
 export { TOTAL };
 
@@ -24,7 +27,8 @@ const TITLE_TOP = 120;
 const VIDEO_TOP = 440;
 
 const SUB_TOP = VIDEO_TOP + VIDEO_H + 40;
-const CARD_TOP = 1556;
+// 词卡排在字幕下方：双语约占 2 行韩 + 1 行中，只中文约占 1 行
+const CARD_TOP = Math.max(1556, SUB_TOP + (SUB_MODE === "zh" ? 110 : 270));
 
 const BLUE = "#8fd3ff";
 const YELLOW = "#ffde3b";
@@ -81,7 +85,7 @@ const Credit: React.FC = () => (
       textAlign: "center",
       fontFamily: ZH,
       fontWeight: 500,
-      fontSize: 26,
+      fontSize: 22,
       letterSpacing: 2,
       color: "#8a8a8a",
     }}
@@ -109,7 +113,7 @@ const Subtitle: React.FC<{ t: number }> = ({ t }) => {
         textAlign: "center",
       }}
     >
-      <div
+      {SUB_MODE === "bilingual" && <div
         style={{
           fontFamily: KO,
           fontWeight: 900,
@@ -122,13 +126,13 @@ const Subtitle: React.FC<{ t: number }> = ({ t }) => {
         }}
       >
         {orig}
-      </div>
+      </div>}
       <div
         style={{
-          marginTop: 14,
+          marginTop: SUB_MODE === "bilingual" ? 14 : 0,
           fontFamily: ZH,
           fontWeight: 700,
-          fontSize: 46,
+          fontSize: SUB_MODE === "bilingual" ? 46 : 52,
           lineHeight: 1.4,
           color: "#fff",
           whiteSpace: "pre-line",
