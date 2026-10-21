@@ -3,14 +3,13 @@ import {
   AbsoluteFill,
   continueRender,
   delayRender,
-  interpolate,
   OffthreadVideo,
   staticFile,
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
-import { CARDS, CUES } from "./cues";
-import { CREDIT, SUB_MODE, TOTAL, VIDEO_H } from "./config";
+import { CARDS, CUES, type Card } from "./cues";
+import { ACCENT, CREDIT, SUB_MODE, TOTAL, VIDEO_H } from "./config";
 
 // 视频里必须写素材出处
 if (!CREDIT.trim()) throw new Error("config.ts 的 CREDIT 必填：视频里必须标注素材出处");
@@ -27,8 +26,6 @@ const TITLE_TOP = 120;
 const VIDEO_TOP = 440;
 
 const SUB_TOP = VIDEO_TOP + VIDEO_H + 40;
-// 词卡排在字幕下方：双语约占 2 行韩 + 1 行中，只中文约占 1 行
-const CARD_TOP = Math.max(1556, SUB_TOP + (SUB_MODE === "zh" ? 110 : 270));
 
 const BLUE = "#8fd3ff";
 const YELLOW = "#ffde3b";
@@ -94,104 +91,51 @@ const Credit: React.FC = () => (
   </div>
 );
 
-const Subtitle: React.FC<{ t: number }> = ({ t }) => {
-  const cue = CUES.find((c) => t >= c.start && t < c.end);
-  if (!cue) return null;
-  const orig = cue.steps
-    ? cue.steps.filter(([, at]) => t >= at).map(([s]) => s).join("")
-    : cue.orig;
+// 重点词：字幕里原地高亮（下划色条）+ 中文下面一行轻注释，不再弹框
+// CARDS 里可写 match（字幕里实际出现的写法，如 "잘못 걸렸"）；不写就用 word 去掉 "다"/括号 后的词干去匹配
+const stemOf = (c: Card) => c.match || c.word.replace(/\(.*?\)/g, "").replace(/다$/, "").trim();
+const markWord = (text: string, card: Card | undefined) => {
+  if (!card) return text;
+  const stem = stemOf(card);
+  const i = stem ? text.indexOf(stem) : -1;
+  if (i < 0) return text;
   return (
-    <div
-      style={{
-        position: "absolute",
-        top: SUB_TOP,
-        left: 50,
-        width: W - 100,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        textAlign: "center",
-      }}
-    >
-      {SUB_MODE === "bilingual" && <div
-        style={{
-          fontFamily: KO,
-          fontWeight: 900,
-          fontSize: cue.steps ? 84 : 58,
-          lineHeight: 1.32,
-          letterSpacing: cue.steps ? 10 : 0,
-          color: YELLOW,
-          whiteSpace: "pre-line",
-          wordBreak: "keep-all",
-        }}
-      >
-        {orig}
-      </div>}
-      <div
-        style={{
-          marginTop: SUB_MODE === "bilingual" ? 14 : 0,
-          fontFamily: ZH,
-          fontWeight: 700,
-          fontSize: SUB_MODE === "bilingual" ? 46 : 52,
-          lineHeight: 1.4,
-          color: "#fff",
-          whiteSpace: "pre-line",
-        }}
-      >
-        {cue.zh}
-      </div>
+    <>
+      {text.slice(0, i)}
+      <span style={{ backgroundImage: `linear-gradient(transparent 78%, ${ACCENT} 78%, ${ACCENT} 92%, transparent 92%)` }}>{text.slice(i, i + stem.length)}</span>
+      {text.slice(i + stem.length)}
+    </>
+  );
+};
+
+const Gloss: React.FC<{ card: Card; t: number }> = ({ card, t }) => {
+  const k = Math.min(1, (t - card.start) / 0.3, (card.end - t) / 0.2);
+  return (
+    <div style={{ marginTop: 22, display: "flex", alignItems: "baseline", justifyContent: "center", gap: 16, opacity: k, transform: `translateY(${(1 - Math.min(1, (t - card.start) / 0.3)) * 8}px)` }}>
+      <span style={{ fontFamily: KO, fontWeight: 800, fontSize: 36, color: ACCENT }}>{card.word}</span>
+      <span style={{ fontFamily: ZH, fontWeight: 500, fontSize: 32, color: "rgba(255,255,255,.62)" }}>{card.mean}</span>
     </div>
   );
 };
 
-const VocabCard: React.FC<{ t: number }> = ({ t }) => {
-  const card = CARDS.find((c) => t >= c.start && t < c.end);
-  if (!card) return null;
-  const inT = t - card.start;
-  const outT = card.end - t;
-  const k = Math.min(1, inT / 0.25, outT / 0.2);
-  const y = interpolate(Math.min(1, inT / 0.25), [0, 1], [18, 0]);
+const Subtitle: React.FC<{ t: number; showCards: boolean }> = ({ t, showCards }) => {
+  const cue = CUES.find((c) => t >= c.start && t < c.end);
+  const card = showCards ? CARDS.find((c) => t >= c.start && t < c.end) : undefined;
+  if (!cue && !card) return null;
+  const orig = cue ? (cue.steps ? cue.steps.filter(([, at]) => t >= at).map(([s]) => s).join("") : cue.orig) : "";
   return (
-    <div
-      style={{
-        position: "absolute",
-        top: CARD_TOP,
-        left: 0,
-        width: W,
-        display: "flex",
-        justifyContent: "center",
-        opacity: k,
-        transform: `translateY(${y}px)`,
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 22,
-          padding: "16px 30px 16px 16px",
-          border: "2px solid #3a3a3a",
-          borderRadius: 14,
-          background: "#121212",
-        }}
-      >
-        <div
-          style={{
-            fontFamily: ZH,
-            fontWeight: 900,
-            fontSize: 28,
-            color: "#000",
-            background: YELLOW,
-            borderRadius: 8,
-            padding: "6px 12px",
-            letterSpacing: 2,
-          }}
-        >
-          重点表达
+    <div style={{ position: "absolute", top: SUB_TOP, left: 50, width: W - 100, display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
+      {cue && SUB_MODE === "bilingual" && (
+        <div style={{ fontFamily: KO, fontWeight: 900, fontSize: cue.steps ? 84 : 58, lineHeight: 1.32, letterSpacing: cue.steps ? 10 : 0, color: YELLOW, whiteSpace: "pre-line", wordBreak: "keep-all" }}>
+          {markWord(orig, card)}
         </div>
-        <div style={{ fontFamily: KO, fontWeight: 800, fontSize: 44, color: YELLOW }}>{card.word}</div>
-        <div style={{ fontFamily: ZH, fontWeight: 500, fontSize: 34, color: "#e8e8e8" }}>{card.mean}</div>
-      </div>
+      )}
+      {cue && (
+        <div style={{ marginTop: SUB_MODE === "bilingual" ? 14 : 0, fontFamily: ZH, fontWeight: 700, fontSize: SUB_MODE === "bilingual" ? 46 : 52, lineHeight: 1.4, color: "#fff", whiteSpace: "pre-line" }}>
+          {cue.zh}
+        </div>
+      )}
+      {card && <Gloss card={card} t={t} />}
     </div>
   );
 };
@@ -210,8 +154,7 @@ export const KimVideo: React.FC<Props> = ({ cards, subtitles, title = true, vide
         <OffthreadVideo src={staticFile("clip.mp4")} style={{ width: W, height: VIDEO_H }} />
       </div>
       )}
-      {subtitles && <Subtitle t={t} />}
-      {cards && <VocabCard t={t} />}
+      {subtitles && <Subtitle t={t} showCards={cards} />}
     </AbsoluteFill>
   );
 };
