@@ -60,14 +60,14 @@ export const CUES: Cue[] = [
 ];
 
 // 重点表达卡片
-export type Card = { start: number; end: number; word: string; mean: string; match?: string };
+export type Card = { start: number; end: number; word: string; mean: string };
 
 export const CARDS: Card[] = [
   { start: 2.2, end: 9.4, word: "scoot over", mean: "往里挪一挪（口语，略显不客气）" },
   { start: 14.3, end: 17.3, word: "또박또박", mean: "一字一句地、清清楚楚地" },
-  { start: 35.0, end: 38.0, word: "잘못 걸리다", match: "잘못 걸렸", mean: "惹错人、碰上硬茬" },
-  { start: 44.2, end: 47.2, word: "짜증(이) 나다", match: "짜증 나", mean: "心烦、不耐烦" },
-  { start: 47.3, end: 51.0, word: "무례하다", match: "무례하", mean: "无礼、没礼貌" },
-  { start: 51.6, end: 54.6, word: "주눅(이) 들다", match: "주눅 들", mean: "发怵、畏缩、怯场" },
-  { start: 63.9, end: 68.6, word: "시키다", match: "시키", mean: "（点餐时）点" },
+  { start: 35.0, end: 38.0, word: "잘못 걸리다", mean: "惹错人、碰上硬茬" },
+  { start: 44.2, end: 47.2, word: "짜증(이) 나다", mean: "心烦、不耐烦" },
+  { start: 47.3, end: 51.0, word: "무례하다", mean: "无礼、没礼貌" },
+  { start: 51.6, end: 54.6, word: "주눅(이) 들다", mean: "发怵、畏缩、怯场" },
+  { start: 63.9, end: 68.6, word: "시키다", mean: "（点餐时）点" },
 ];
