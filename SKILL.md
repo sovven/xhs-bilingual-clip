@@ -7,14 +7,16 @@ description: 把 YouTube/Shorts 上的韩综（或其他外语）短视频片段
 
 模板在本 skill 的 `template/`（Remotion 4 项目）。每条视频复制一份模板到新文件夹再改。
 
-## 工具（Windows，装在 D 盘）
-- yt-dlp：`D:\Tools\yt-dlp\yt-dlp.exe`
-- whisper.cpp：`D:\Tools\whisper\bin\Release\whisper-cli.exe` + `D:\Tools\whisper\ggml-large-v3-turbo-q5_0.bin`
-- ffmpeg（full build，需要在 PATH 里）
-- Node 22+；Remotion 依赖用 `npm i` 安装，或者把 node_modules 做成 junction 指向已有项目
-- 字体：把 `C:\Windows\Fonts\NotoSansSC-VF.ttf`、`NotoSansKR-VF.ttf` 复制到 `public/fonts/`
+## 工具（Windows / macOS / Linux）
+调用方（比如 KCLIP Studio）在任务里给了工具路径时，以给的为准。没给就按下面找：先看 PATH，再问用户。
 
-缺少的工具要先问用户能不能下载，装到 `D:\Tools`，不要装在 C 盘。
+- yt-dlp：PATH 里的 `yt-dlp`
+- whisper.cpp：`whisper-cli` + 一个 ggml 模型（推荐 `ggml-large-v3-turbo-q5_0.bin`）。模型没有固定位置，找不到就问用户放在哪
+- ffmpeg（full build，需要在 PATH 里）
+- Node 22+；Remotion 依赖在 `template/` 里用 `npm i` 安装，或者把新项目的 node_modules 链接到已装好的那份（Windows 用 junction，macOS / Linux 用 `ln -s`）
+- 字体：把 `NotoSansSC-VF.ttf`、`NotoSansKR-VF.ttf` 复制到 `public/fonts/`。Windows 在 `C:\Windows\Fonts`，macOS 在 `~/Library/Fonts` 或 `/Library/Fonts`，Linux 在 `~/.local/share/fonts` 或 `/usr/share/fonts`；没有就从 Google Fonts 下载 Noto Sans KR / SC
+
+缺少的工具不要自己下载安装，先告诉用户缺什么、去哪儿装，由用户决定装在哪。
 
 ## 流程
 1. **下载**：`yt-dlp -f "bv*[height>=1080]+ba/b" --merge-output-format mp4 -o original.mp4 <url>`
