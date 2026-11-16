@@ -10,7 +10,7 @@ import {
   useVideoConfig,
 } from "remotion";
 import { CARDS, CUES } from "./cues";
-import { CREDIT, PALETTE, PALETTES, SUB_MODE, TOTAL, VIDEO_H } from "./config";
+import { CREDIT, PALETTE, PALETTES, SUB_MODE, TITLE, TOTAL, VIDEO_H } from "./config";
 
 // 视频里必须写素材出处
 if (!CREDIT.trim()) throw new Error("config.ts 的 CREDIT 必填：视频里必须标注素材出处");
@@ -26,12 +26,22 @@ export const FPS = 30;
 // 小红书安全区：顶部 150px 状态栏/作者栏，底部 440px（y>1480）文案和互动栏，右侧 140px 点赞收藏图标
 export const SAFE = { top: 150, bottom: 1480, side: 140 };
 const TITLE_TOP = SAFE.top;
-const VIDEO_TOP = 460;
-// 原片最高显示 680，超出的部分 cover 裁掉左右，给字幕和词卡留位置
-const SHOW_H = Math.min(VIDEO_H, 680);
-const SUB_TOP = VIDEO_TOP + SHOW_H + 32;
-// 词卡排在字幕下方：双语最多 2 行韩 + 1 行中，只中文约 2 行；词卡底边不能超过 SAFE.bottom
-const CARD_TOP = Math.min(SAFE.bottom - 76, SUB_TOP + (SUB_MODE === "zh" ? 140 : 220));
+const SUB_SPACE = SUB_MODE === "zh" ? 130 : 200;
+const CARD_H = 84;
+const titleBottom = (size: number) => TITLE_TOP + Math.round(size * 1.22 * TITLE.length);
+// 原片宽 1080 原尺寸显示，不裁切不缩放；放得下就字幕+词卡排在下方
+// 放不下（YT 模式）：标题缩小、原片上移，字幕叠在原片上，但一定在安全线以内
+const YT = titleBottom(104) + 28 + 30 + 18 + VIDEO_H + 24 + SUB_SPACE > SAFE.bottom;
+const TITLE_SIZE = YT ? 80 : 104;
+const TITLE_BOTTOM = titleBottom(TITLE_SIZE);
+// 间距：标题底 → 出处小字 → 原片，避免出处贴着/压住标题；YT 模式收紧，给字幕腾位置
+const CREDIT_TOP = TITLE_BOTTOM + (YT ? 10 : 28);
+const VIDEO_TOP = CREDIT_TOP + (YT ? 30 : 48);
+const SHOW_H = VIDEO_H; // 原片原尺寸，不缩小不裁切
+const SHOW_W = Math.round((W * SHOW_H) / VIDEO_H);
+// YT 模式：中文字幕贴着安全线 1480 往上排（单行），词卡放到原片左上角
+const SUB_TOP = YT ? SAFE.bottom - 76 : VIDEO_TOP + SHOW_H + 24;
+const CARD_TOP = YT ? VIDEO_TOP + 28 : SUB_TOP + SUB_SPACE;
 
 const PAL = PALETTES[PALETTE];
 const YELLOW = PAL.accent;
@@ -65,7 +75,7 @@ const Title: React.FC = () => {
   const line: React.CSSProperties = {
     fontFamily: ZH,
     fontWeight: 900,
-    fontSize: 104,
+    fontSize: TITLE_SIZE,
     lineHeight: 1.22,
     letterSpacing: 4,
     color: "#fff",
@@ -82,7 +92,7 @@ const Credit: React.FC = () => (
   <div
     style={{
       position: "absolute",
-      top: VIDEO_TOP - 50,
+      top: CREDIT_TOP,
       left: 0,
       width: W,
       textAlign: "center",
@@ -139,6 +149,7 @@ const Subtitle: React.FC<{ t: number }> = ({ t }) => {
           lineHeight: 1.4,
           color: PAL.zh,
           whiteSpace: "pre-line",
+          ...(YT ? { background: "rgba(8,8,8,0.72)", borderRadius: 6, padding: "2px 14px 4px", fontWeight: 500, fontSize: 42, color: "#fff" } : {}),
         }}
       >
         {cue.zh}
@@ -159,31 +170,33 @@ const VocabCard: React.FC<{ t: number }> = ({ t }) => {
       style={{
         position: "absolute",
         top: CARD_TOP,
-        left: 0,
-        width: W,
+        left: YT ? 36 : 0,
+        width: YT ? W - 36 - SAFE.side : W,
         display: "flex",
-        justifyContent: "center",
+        justifyContent: YT ? "flex-start" : "center",
         opacity: k,
         transform: `translateY(${y}px)`,
       }}
     >
-      {/* 单词放在强调色圆角胶囊里，右边是释义；不加“重点表达”标签 */}
-      <div style={{ display: "flex", alignItems: "center", gap: 18, maxWidth: W - SAFE.side * 2 }}>
-        <div
-          style={{
-            fontFamily: KO,
-            fontWeight: 800,
-            fontSize: 40,
-            color: PAL.ink,
-            background: YELLOW,
-            borderRadius: 999,
-            padding: "6px 26px 8px",
-            whiteSpace: "nowrap",
-          }}
-        >
-          {card.word}
-        </div>
-        <div style={{ fontFamily: ZH, fontWeight: 500, fontSize: 30, lineHeight: 1.3, color: PAL.zh }}>{card.mean}</div>
+      {/* 深色磨砂玻璃：保留玻璃质感，压在亮画面上也要一眼看清 */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 18,
+          maxWidth: "100%",
+          padding: "14px 28px 16px",
+          borderRadius: 24,
+          background: "linear-gradient(180deg, rgba(28,28,30,0.72), rgba(10,10,12,0.66))",
+          backdropFilter: "blur(26px) saturate(170%)",
+          WebkitBackdropFilter: "blur(26px) saturate(170%)",
+          border: "1.5px solid rgba(255,255,255,0.32)",
+          boxShadow: "inset 0 1px 0 rgba(255,255,255,0.4), 0 12px 32px rgba(0,0,0,0.35)",
+        }}
+      >
+        <div style={{ fontFamily: KO, fontWeight: 900, fontSize: 46, lineHeight: 1.15, color: YELLOW, whiteSpace: "nowrap" }}>{card.word}</div>
+        <div style={{ width: 2, height: 36, background: "rgba(255,255,255,0.35)" }} />
+        <div style={{ fontFamily: ZH, fontWeight: 700, fontSize: 34, lineHeight: 1.2, color: "#fff", whiteSpace: "nowrap" }}>{card.mean}</div>
       </div>
     </div>
   );
@@ -199,8 +212,8 @@ export const KimVideo: React.FC<Props> = ({ cards, subtitles, title = true, vide
       {title && <Title />}
       {video && <Credit />}
       {video && (
-        <div style={{ position: "absolute", top: VIDEO_TOP, left: 0, width: W, height: SHOW_H, overflow: "hidden" }}>
-        <OffthreadVideo src={staticFile("clip.mp4")} style={{ width: W, height: SHOW_H, objectFit: "cover" }} />
+        <div style={{ position: "absolute", top: VIDEO_TOP, left: (W - SHOW_W) / 2, width: SHOW_W, height: SHOW_H, overflow: "hidden" }}>
+        <OffthreadVideo src={staticFile("clip.mp4")} style={{ width: SHOW_W, height: SHOW_H }} />
       </div>
       )}
       {subtitles && <Subtitle t={t} />}

@@ -19,13 +19,34 @@ const stroke = (w: number, c = "#000") => ({ WebkitTextStroke: `${w}px ${c}`, pa
 
 const Band: React.FC = () => {
   const line: React.CSSProperties = { fontFamily: ZH, fontWeight: 900, fontSize: 112, lineHeight: 1.2, letterSpacing: 4, color: "#fff", textAlign: "center" };
+  // 原片不裁切：放得下（标题+画面+钩子）就照旧排；原片太高就标题缩小、画面原尺寸贴底，
+  // 钩子改成和视频字幕同款的灰底字，叠在画面下部
+  const TALL = 390 + VIDEO_H + 200 > 1440;
+  if (TALL) {
+    const imgTop = Math.max(300, 1440 - VIDEO_H);
+    const g: React.CSSProperties = { display: "inline-block", background: "rgba(8,8,8,0.72)", borderRadius: 8, padding: "4px 18px 8px" };
+    return (
+      <AbsoluteFill style={{ background: "#000" }}>
+        <div style={{ position: "absolute", top: 48, width: 1080 }}>
+          <TitleLines style={{ ...line, fontSize: 96 }} />
+        </div>
+        <Img src={staticFile("cover_frame.png")} style={{ position: "absolute", top: imgTop, left: 0, width: 1080, height: VIDEO_H }} />
+        <div style={{ position: "absolute", bottom: 26, width: 1080, textAlign: "center" }}>
+          <div style={{ ...g, fontFamily: KO, fontWeight: 900, fontSize: 52, color: YELLOW }}>{COVER_HOOK.orig}</div>
+          <br />
+          <div style={{ ...g, marginTop: 8, fontFamily: ZH, fontWeight: 700, fontSize: 40, color: "#fff" }}>{COVER_HOOK.zh}</div>
+        </div>
+      </AbsoluteFill>
+    );
+  }
+  const SHOW_H = VIDEO_H;
   return (
     <AbsoluteFill style={{ background: "#000" }}>
       <div style={{ position: "absolute", top: 70, width: 1080 }}>
         <TitleLines style={line} />
       </div>
-      <Img src={staticFile("cover_frame.png")} style={{ position: "absolute", top: 390, left: 0, width: 1080, height: VIDEO_H }} />
-      <div style={{ position: "absolute", top: 390 + VIDEO_H + 36, width: 1080, textAlign: "center" }}>
+      <Img src={staticFile("cover_frame.png")} style={{ position: "absolute", top: 390, left: 0, width: 1080, height: SHOW_H }} />
+      <div style={{ position: "absolute", top: 390 + SHOW_H + 36, width: 1080, textAlign: "center" }}>
         <div style={{ fontFamily: KO, fontWeight: 900, fontSize: 70, color: YELLOW }}>{COVER_HOOK.orig}</div>
         <div style={{ fontFamily: ZH, fontWeight: 700, fontSize: 50, color: "#fff", marginTop: 10 }}>{COVER_HOOK.zh}</div>
       </div>
